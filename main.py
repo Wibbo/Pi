@@ -117,7 +117,7 @@ while True:
         # print(digit_pos)
 
         # Draw the line.
-        pygame.draw.line(grid_display, pen, previous_point, new_point, 4)
+        pygame.draw.line(grid_display, pen, previous_point, new_point, 1)
         digit_pos += 1
         previous_point = new_point
 
