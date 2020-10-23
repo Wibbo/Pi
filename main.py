@@ -2,16 +2,20 @@ import statistics as st
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-import turtle
 import seaborn as sns
 import pandas as pd
+import pygame
 
 # Changing these values will determine what happens later.
-plot_digits = True
+plot_digits = False
 digit_count_to_display = 769
 digits_to_process = 1000
-turtle_count = 800
+turtle_count = 20000
 plot_distribution = False
+pi_is_running = False
+screen_width = 1600
+screen_height = 1200
+line_length = 4
 
 file_handle = open('Pi-million-places.txt', 'r')   
 file_contents = file_handle.read()
@@ -31,8 +35,8 @@ for pi_digit in file_contents[:digits_to_process]:
         # Update the distribution of each digit.
         digit_dist[int_digit][1] = digit_dist[int_digit][1] + 1
         # And record the history of each digit.
-        x = digit_dist[:,1]
-        all_digits[count] = x          
+        totals_column = digit_dist[:,1]
+        all_digits[count] = totals_column          
         count += 1
 
 df_digit_distribution = pd.DataFrame(data=digit_dist, columns=['Digit', 'Count'])
@@ -61,17 +65,61 @@ if plot_distribution:
 
 # Visualise the digits of Pi as a turtle drawing.
 if plot_digits:
-    s = turtle.getscreen()
-    t = turtle.Turtle()
-    t.pensize(2)
-    t.speed(10)
-    s.colormode(255)
+    pen_colours = [[255, 241, 0],[255, 140, 0],[232, 17, 35],[236, 0, 140],
+                  [104, 33, 122],[0, 24, 143],[0, 188, 242],[0, 178, 148],
+                  [0, 158, 73],[186, 216, 10]]
     
     for pi_digit in file_contents[:turtle_count]: 
         if pi_digit.isdigit() == True: 
             int_digit = int(pi_digit)
             t.setheading(int_digit * 36)
-            t.pencolor(34, 56, 98)
-            t.forward(10)
+            t.pencolor(pen_colours[int_digit])
+            t.forward(3)
     turtle.exitonclick()
+
+# Get a screen context and create the initial setup.
+grid_display = pygame.display.set_mode((screen_width, screen_height))
+mid_point = ()
+digit_pos = 0
+previous_point = (screen_width//2, screen_height-400)
+
+pen_colours = [[255, 241, 0],[255, 140, 0],[232, 17, 35],[236, 0, 140],
+              [104, 33, 122],[0, 24, 143],[0, 188, 242],[0, 178, 148],
+              [0, 158, 73],[186, 216, 10]]
+
+while True:
+    # Handle application interrupts - effectively mouse and keyboard input.
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.KEYDOWN:
+            key_pressed = pygame.key.name(event.key).upper()
+ 
+            # React to specified keys.
+            if key_pressed == 'P':
+                pi_is_running = not pi_is_running
+
+    if pi_is_running:
+        
+        int_digit = int(file_contents[digit_pos])
+        
+        # Calculate the destination for the line.
+        angle = 36 * int_digit
+        angle = math.radians(angle)
+        new_x = line_length * math.sin(angle) + previous_point[0]
+        new_y = line_length * math.cos(angle) + previous_point[1]
+        new_point = (new_x, new_y)
+        pen = pen_colours[int_digit]
+        
+        # print(digit_pos)
+
+        # Draw the line.
+        pygame.draw.line(grid_display, pen, previous_point, new_point, 4)
+        digit_pos += 1
+        previous_point = new_point
+
+    pygame.display.update()
 
